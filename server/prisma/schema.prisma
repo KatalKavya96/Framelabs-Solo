@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String                @id @default(cuid())
+  email          String                @unique
+  name           String
+  avatarUrl      String?
+  passwordHash   String
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  memberships    Membership[]
+  createdDiagrams Diagram[]            @relation("DiagramCreatedBy")
+  updatedDiagrams Diagram[]            @relation("DiagramUpdatedBy")
+  versions       DiagramVersion[]
+  shareLinks     ShareLink[]
+  collaborators  DiagramCollaborator[]
+  comments       Comment[]
+}
+
+model Organization {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  memberships Membership[]
+  workspaces  Workspace[]
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  role           String       @default("MEMBER")
+  createdAt      DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+model Workspace {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  slug           String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projects       Project[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+}
+
+model Project {
+  id          String      @id @default(cuid())
+  workspaceId String
+  name        String
+  slug        String
+  description String      @default("")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  diagrams    Diagram[]
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId])
+}
+
+model Diagram {
+  id                String                @id @default(cuid())
+  projectId         String
+  title             String
+  description       String                @default("")
+  type              String                @default("ARCHITECTURE")
+  dsl               String
+  modelJson         String
+  tagsJson          String                @default("[]")
+  revision          Int                   @default(1)
+  lastVersionNumber Int                   @default(1)
+  createdById       String
+  updatedById       String
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  project           Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy         User                  @relation("DiagramCreatedBy", fields: [createdById], references: [id])
+  updatedBy         User                  @relation("DiagramUpdatedBy", fields: [updatedById], references: [id])
+  versions          DiagramVersion[]
+  shareLinks        ShareLink[]
+  collaborators     DiagramCollaborator[]
+  comments          Comment[]
+
+  @@index([projectId, updatedAt])
+  @@index([title])
+}
+
+model DiagramVersion {
+  id            String   @id @default(cuid())
+  diagramId     String
+  versionNumber Int
+  revision      Int
+  title         String
+  description   String
+  dsl           String
+  modelJson     String
+  summary       String   @default("Diagram updated")
+  actorId       String
+  createdAt     DateTime @default(now())
+  diagram       Diagram  @relation(fields: [diagramId], references: [id], onDelete: Cascade)
+  actor         User     @relation(fields: [actorId], references: [id])
+
+  @@unique([diagramId, versionNumber])
+  @@index([diagramId, createdAt])
+}
+
+model DiagramCollaborator {
+  id        String   @id @default(cuid())
+  diagramId String
+  userId    String
+  permission String  @default("EDIT")
+  createdAt DateTime @default(now())
+  diagram   Diagram  @relation(fields: [diagramId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([diagramId, userId])
+  @@index([userId])
+}
+
+model ShareLink {
+  id          String   @id @default(cuid())
+  diagramId   String
+  token       String   @unique
+  permission  String   @default("VIEW")
+  scope       String   @default("PUBLIC")
+  expiresAt   DateTime?
+  createdById String
+  createdAt   DateTime @default(now())
+  diagram     Diagram  @relation(fields: [diagramId], references: [id], onDelete: Cascade)
+  createdBy   User     @relation(fields: [createdById], references: [id])
+
+  @@index([diagramId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  diagramId String
+  authorId  String
+  body      String
+  nodeId    String?
+  x         Float?
+  y         Float?
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  diagram   Diagram  @relation(fields: [diagramId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
+
+  @@index([diagramId, createdAt])
+}

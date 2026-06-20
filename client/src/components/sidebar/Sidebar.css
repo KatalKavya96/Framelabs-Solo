@@ -1,0 +1,11 @@
+.sidebar{
+
+    display : flex;
+    flex-direction : column;
+    justify-content : space-between;
+    background-color : #010B1A;
+    color : white;
+    border : 1px solid white;
+    border-radius : 10px;
+    padding-left : 2rem;
+}

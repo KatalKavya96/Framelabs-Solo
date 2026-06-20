@@ -1,0 +1,28 @@
+{
+  "name": "framelabs-solo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently -n API,WEB -c cyan,green \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "build": "npm --prefix server run build && npm --prefix client run build",
+    "db:setup": "npm --prefix server run db:setup",
+    "db:seed": "npm --prefix server run db:seed",
+    "start": "npm --prefix server run start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KatalKavya96/Framelabs-Solo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "bugs": {
+    "url": "https://github.com/KatalKavya96/Framelabs-Solo/issues"
+  },
+  "homepage": "https://github.com/KatalKavya96/Framelabs-Solo#readme"
+}
