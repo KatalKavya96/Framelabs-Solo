@@ -73,3 +73,4 @@ function leaveRoom(io: Server, diagramId: string, socketId: string) {
   if (!room?.size) rooms.delete(diagramId);
   io.to(`diagram:${diagramId}`).emit("presence:updated", room ? [...room.values()] : []);
 }
+
